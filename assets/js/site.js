@@ -242,6 +242,8 @@
   });
 
   /* ---------- Anatomie einer Fassade ---------- */
+  /* Ein Scroll in den Bereich loest die ganze Animation automatisch aus (statt ueber viel Scrollstrecke
+     gescrubbt zu werden), damit es beim ersten Mal nicht wie das Ende der Seite wirkt. */
   var ana = $(".anatomy");
   if (ana) {
     var layers = $$(".layer", ana), items = $$(".layer-list li", ana), labels = $$(".layer-label", ana);
@@ -249,12 +251,11 @@
     var gap = mm.matches ? 58 : 44;
     gsap.set(labels, { opacity: 0, x: -10 });
     var tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: ana, start: "top top", end: "+=" + (window.innerHeight * 2.2), scrub: 0.8, pin: ".anatomy-pin",
-        onUpdate: function (self) {
-          var k = Math.min(items.length, Math.floor(self.progress * (items.length + 0.6)));
-          items.forEach(function (li, i) { li.classList.toggle("on", i < k); });
-        }
+      paused: true,
+      onUpdate: function () {
+        var p = tl.progress();
+        var k = Math.min(items.length, Math.floor(p * (items.length + 0.6)));
+        items.forEach(function (li, i) { li.classList.toggle("on", i < k); });
       }
     });
     tl.from(".anatomy-art svg", { scale: 0.9, opacity: 0.4, duration: 0.6, ease: "none" }, 0);
@@ -263,6 +264,16 @@
     });
     tl.to(labels, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12 }, 1.0);
     tl.to({}, { duration: 0.6 });
+
+    ScrollTrigger.create({
+      trigger: ana, start: "top top", end: "+=" + Math.round(window.innerHeight * 0.9), pin: ".anatomy-pin",
+      onEnter: function () { tl.play(0); },
+      onEnterBack: function () { tl.play(0); },
+      onLeaveBack: function () {
+        tl.progress(0).pause();
+        items.forEach(function (li) { li.classList.remove("on"); });
+      }
+    });
   }
 
   /* ---------- Geschichte: Bild wechselt mit dem Text ---------- */
