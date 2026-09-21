@@ -140,7 +140,7 @@
       e.preventDefault();
       var v = function (id) { return ($("#" + id, form) || {}).value || ""; };
       var body = "Name: " + v("name") + "\nTelefon: " + v("telefon") + "\nE-Mail: " + v("email") + "\nOrt: " + v("ort") + "\nLeistung: " + (svc.value || "noch offen") + "\n\n" + v("nachricht");
-      window.location.href = "mailto:info@a-bbau.de?subject=" + encodeURIComponent("Anfrage über die Website: " + v("name")) + "&body=" + encodeURIComponent(body);
+      window.location.href = "mailto:info@ab-bau23.de?subject=" + encodeURIComponent("Anfrage über die Website: " + v("name")) + "&body=" + encodeURIComponent(body);
       var ok = $(".form-ok", form); if (ok) ok.hidden = false;
     });
   }
