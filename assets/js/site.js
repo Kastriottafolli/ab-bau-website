@@ -101,14 +101,27 @@
   var masonry = $(".masonry");
   if (masonry) {
     var figs = $$("figure", masonry);
+    var filterNames = { alle: 1, fassade: 1, trockenbau: 1, dach: 1, renovierung: 1 };
+    function applyFilter(f) {
+      if (!filterNames[f]) f = "alle";
+      $$(".filters .chip").forEach(function (x) {
+        var on = x.getAttribute("data-filter") === f;
+        x.classList.toggle("on", on);
+        x.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      figs.forEach(function (fig) { fig.classList.toggle("hide", f !== "alle" && fig.getAttribute("data-cat") !== f); });
+      if (hasGsap && window.ScrollTrigger) ScrollTrigger.refresh();
+    }
     $$(".filters .chip").forEach(function (b) {
       b.addEventListener("click", function () {
-        $$(".filters .chip").forEach(function (x) { x.classList.toggle("on", x === b); });
         var f = b.getAttribute("data-filter");
-        figs.forEach(function (fig) { fig.classList.toggle("hide", f !== "alle" && fig.getAttribute("data-cat") !== f); });
-        if (hasGsap) ScrollTrigger.refresh();
+        applyFilter(f);
+        var url = f === "alle" ? "projekte.html" : "projekte.html#" + f;
+        if (history.replaceState) history.replaceState(null, "", url);
       });
     });
+    var initialFilter = (location.hash || "").replace("#", "");
+    if (initialFilter) applyFilter(initialFilter);
     var lb = $(".lightbox"), lbImg = $("img", lb), lbCap = $("p", lb), idx = 0;
     function visible() { return figs.filter(function (f) { return !f.classList.contains("hide"); }); }
     function show(i) {
@@ -117,7 +130,22 @@
       lbImg.src = im.getAttribute("data-full") || im.src; lbImg.alt = im.alt;
       lbCap.textContent = ($("figcaption", v[idx]) || {}).textContent || "";
     }
-    figs.forEach(function (f) { f.addEventListener("click", function () { show(visible().indexOf(f)); lb.classList.add("open"); document.body.style.overflow = "hidden"; }); });
+    figs.forEach(function (f) {
+      f.setAttribute("tabindex", "0");
+      f.setAttribute("role", "button");
+      var cap = $("figcaption", f);
+      if (cap && cap.textContent.trim()) f.setAttribute("aria-label", "Bild öffnen: " + cap.textContent.trim());
+      f.addEventListener("click", function () {
+        show(visible().indexOf(f));
+        lb.classList.add("open");
+        document.body.style.overflow = "hidden";
+        lbImg.setAttribute("tabindex", "-1");
+        lbImg.focus();
+      });
+      f.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f.click(); }
+      });
+    });
     function close() { lb.classList.remove("open"); document.body.style.overflow = ""; }
     $(".lb-close", lb).addEventListener("click", close);
     $(".lb-prev", lb).addEventListener("click", function (e) { e.stopPropagation(); show(idx - 1); });
